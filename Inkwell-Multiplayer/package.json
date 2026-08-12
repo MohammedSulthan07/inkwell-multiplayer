@@ -1,0 +1,19 @@
+{
+  "name": "inkwell-multiplayer",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Inkwell — The Word Duel with Node.js + Socket.IO multiplayer.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  }
+}

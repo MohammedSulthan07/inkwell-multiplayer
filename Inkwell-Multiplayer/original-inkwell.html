@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inkwell — The Word Duel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f1ead4;
+    --paper-dark:#e6dcbe;
+    --paper-line:#cfc3a0;
+    --ink:#241f1a;
+    --ink-soft:#5a5142;
+    --navy:#2f4858;
+    --gold:#b8912a;
+    --stamp-green:#3f6b4a;
+    --stamp-red:#a5312a;
+    --teamA:#2f4858;
+    --teamB:#8a3b2c;
+    --teamC:#4c6b3f;
+    --teamD:#6b4c8a;
+  }
+  body.theme-navy{
+    --paper:#e7edf2; --paper-dark:#d7e1ea; --paper-line:#b7c6d6; --ink:#16232e; --ink-soft:#3c5468;
+    --navy:#1d3a5f; --gold:#3f7fbf; --stamp-green:#2f7a52; --stamp-red:#b23a3a;
+  }
+  body.theme-green{
+    --paper:#eef2e4; --paper-dark:#e1e9d1; --paper-line:#c3d1a8; --ink:#1f2b17; --ink-soft:#48583a;
+    --navy:#355e3b; --gold:#8a9a3f; --stamp-green:#2f6b3f; --stamp-red:#a5432e;
+  }
+  body.theme-rose{
+    --paper:#f6e9e6; --paper-dark:#f0dad5; --paper-line:#dcb8b0; --ink:#3a1f1c; --ink-soft:#6b453e;
+    --navy:#8a3b4a; --gold:#c76b56; --stamp-green:#3f6b4a; --stamp-red:#9c2b2b;
+  }
+  body.theme-dark{
+    --paper:#1b1a17; --paper-dark:#232220; --paper-line:#3a3833; --ink:#efe9db; --ink-soft:#b6ad99;
+    --navy:#7fb0d6; --gold:#e0b23f; --stamp-green:#63c17e; --stamp-red:#e26a5c;
+  }
+  body.theme-amethyst{
+    --paper:#efe7f3; --paper-dark:#e3d5ec; --paper-line:#c9aedb; --ink:#2a1b33; --ink-soft:#5d4770;
+    --navy:#5b3a86; --gold:#b98fd6; --stamp-green:#3f6b4a; --stamp-red:#a5312a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(0,0,0,0.03), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(0,0,0,0.04), transparent 60%),
+      var(--paper);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Lora', serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 60px;
+  }
+  .theme-switch{ position:fixed; top:16px; right:16px; z-index:30; }
+  .theme-toggle-btn{
+    width:42px; height:42px; border-radius:50%; border:2px solid var(--ink); background:var(--paper-dark);
+    cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.12);
+  }
+  .theme-menu{
+    position:absolute; top:50px; right:0; background:var(--paper-dark); border:1px solid var(--paper-line);
+    border-radius:8px; padding:10px; display:flex; gap:8px; box-shadow:0 8px 22px rgba(0,0,0,0.18);
+  }
+  .theme-swatch{
+    width:26px; height:26px; border-radius:50%; border:2px solid var(--paper-line); cursor:pointer; padding:0;
+  }
+  .theme-swatch.active{ outline:2px solid var(--gold); outline-offset:2px; }
+  .paper-texture{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.5;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(90,81,66,0.05) 28px);
+  }
+  .stage{ position:relative; z-index:1; width:100%; max-width:660px; }
+  .masthead{ text-align:center; margin-bottom:22px; }
+  .masthead .eyebrow{
+    font-family:'IBM Plex Mono', monospace; letter-spacing:0.3em; font-size:11px;
+    color:var(--ink-soft); text-transform:uppercase;
+  }
+  .masthead h1{ font-family:'Playfair Display', serif; font-weight:900; font-size:44px; margin:6px 0 4px; }
+  .masthead .rule{ width:120px; height:3px; margin:10px auto 8px; background:var(--gold); }
+  .masthead .tagline{ font-style:italic; color:var(--ink-soft); font-size:14px; }
+  .card{
+    background:var(--paper-dark); border:1px solid var(--paper-line);
+    box-shadow:0 2px 0 var(--paper-line), 0 12px 30px rgba(36,31,26,0.12);
+    border-radius:2px; padding:30px 28px; position:relative;
+  }
+  .card::before{
+    content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px;
+    background:repeating-linear-gradient(0deg, var(--stamp-red) 0 6px, transparent 6px 12px);
+    opacity:0.55;
+  }
+  label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px;
+  }
+  input[type=number], input[type=text], select{
+    width:100%; font-family:'Lora', serif; font-size:16px; padding:9px 4px;
+    border:none; border-bottom:2px solid var(--ink-soft); background:transparent; color:var(--ink); outline:none;
+  }
+  select{ font-family:'IBM Plex Mono', monospace; font-size:12px; padding:8px 2px; }
+  input:focus, select:focus{ border-bottom-color:var(--gold); }
+  .field{ margin-bottom:20px; }
+
+  .toggle-row{ display:flex; gap:10px; margin-bottom:20px; }
+  .toggle-btn{
+    flex:1; text-align:center; padding:14px 8px; border:2px solid var(--paper-line);
+    border-radius:2px; cursor:pointer; font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft);
+    transition:all .15s ease;
+  }
+  .toggle-btn .tb-sub{ display:block; font-family:'Lora', serif; text-transform:none; letter-spacing:0; font-size:11.5px; margin-top:3px; font-style:italic; }
+  .toggle-btn.on{ border-color:var(--navy); background:rgba(47,72,88,0.08); color:var(--ink); font-weight:600; }
+
+  .player-row{ display:flex; gap:8px; align-items:center; }
+  .player-row input{ flex:2; }
+  .player-row select{ flex:1; }
+  .players-list{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+
+  .mode-options{ display:flex; flex-direction:column; gap:10px; }
+  .mode-option{
+    display:flex; align-items:flex-start; gap:10px; border:1px dashed var(--paper-line);
+    padding:10px 12px; border-radius:2px; cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .mode-option:hover{ border-color:var(--gold); background:rgba(184,145,42,0.06); }
+  .mode-option input{ margin-top:3px; accent-color:var(--navy); width:auto; }
+  .mode-option .mo-title{ font-weight:600; font-size:14.5px; }
+  .mode-option .mo-desc{ font-size:12.5px; color:var(--ink-soft); }
+
+  .btn{
+    font-family:'IBM Plex Mono', monospace; letter-spacing:0.08em; text-transform:uppercase;
+    font-size:13px; font-weight:600; padding:13px 20px; border:2px solid var(--ink);
+    background:var(--ink); color:var(--paper); cursor:pointer; border-radius:2px; width:100%;
+    transition:transform .1s ease, background .15s ease;
+  }
+  .btn:hover{ background:var(--navy); border-color:var(--navy); }
+  .btn:active{ transform:scale(0.98); }
+  .btn:disabled{ opacity:0.5; cursor:default; }
+  .btn.secondary{ background:transparent; color:var(--ink); border-color:var(--ink-soft); }
+  .btn.secondary:hover{ background:var(--ink-soft); color:var(--paper); }
+  .hidden{ display:none !important; }
+
+  .reveal-card{ text-align:center; padding:46px 28px; }
+  .reveal-letter{
+    font-family:'Playfair Display', serif; font-weight:900; font-size:130px; line-height:1;
+    color:var(--navy); text-shadow:3px 3px 0 var(--gold);
+  }
+  .reveal-sub{ font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); margin-top:8px;}
+  .reveal-starter{ margin-top:20px; font-size:19px; }
+  .reveal-starter b{ color:var(--stamp-green); }
+
+  .top-bar{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);
+  }
+  .entry-head{ text-align:center; margin-bottom:6px; }
+  .entry-letter{ font-family:'Playfair Display', serif; font-weight:900; font-size:64px; color:var(--navy); line-height:1; }
+  .entry-sub{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.15em; color:var(--ink-soft); text-transform:uppercase;}
+  .turn-line{ text-align:center; margin:14px 0 18px; font-size:18px; }
+  .turn-line .pname{ font-weight:700; color:var(--navy); }
+  .turn-line .tname{ font-weight:700; }
+  .answer-row{ display:flex; gap:10px; }
+  .answer-row input{ flex:1; }
+  .answer-row button{ width:auto; padding:11px 18px; }
+  .hint{ font-size:12px; color:var(--ink-soft); margin-top:8px; font-style:italic; }
+
+  .result-banner{
+    margin-top:18px; padding:14px 16px; border-radius:2px; position:relative;
+    display:flex; gap:14px; align-items:flex-start; animation:stampIn .28s ease-out;
+  }
+  @keyframes stampIn{ from{opacity:0; transform:scale(1.3) rotate(-8deg);} to{opacity:1; transform:scale(1) rotate(-3deg);} }
+  .result-banner.good{ background:rgba(63,107,74,0.1); border:2px solid var(--stamp-green); }
+  .result-banner.bad{ background:rgba(165,49,42,0.1); border:2px solid var(--stamp-red); }
+  .result-banner.neutral{ background:rgba(90,81,66,0.08); border:2px solid var(--ink-soft); }
+  .stamp{
+    font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:13px; letter-spacing:.08em;
+    text-transform:uppercase; padding:5px 9px; border:2px solid currentColor; border-radius:3px;
+    white-space:nowrap; transform:rotate(-3deg);
+  }
+  .result-banner.good .stamp{ color:var(--stamp-green); }
+  .result-banner.bad .stamp{ color:var(--stamp-red); }
+  .result-banner.neutral .stamp{ color:var(--ink-soft); }
+  .result-text b{ display:block; margin-bottom:2px; }
+  .result-text .meaning{ font-size:13.5px; color:var(--ink-soft); }
+
+  .scoreboard{ margin-top:24px; }
+  .scoreboard .sb-title{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;}
+  .sb-row{
+    display:flex; justify-content:space-between; align-items:center; padding:8px 10px;
+    border-bottom:1px solid var(--paper-line); font-size:14.5px;
+  }
+  .sb-row.active{ background:rgba(184,145,42,0.12); border-radius:2px; }
+  .sb-row.eliminated{ opacity:0.45; text-decoration:line-through; }
+  .sb-row.member{ padding-left:22px; font-size:12.5px; border-bottom:none; }
+  .sb-row.team-head{ font-weight:700; border-bottom:2px solid var(--paper-line); }
+  .sb-row .sb-score{ font-family:'IBM Plex Mono', monospace; font-weight:600; }
+  .sb-row .sb-score.neg{ color:var(--stamp-red); }
+  .sb-row .sb-score.pos{ color:var(--stamp-green); }
+  .team-swatch{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; }
+
+  .used-words{ margin-top:16px; font-size:12px; color:var(--ink-soft); }
+  .used-words b{ color:var(--ink); }
+
+  .end-card{ text-align:center; }
+  .trophy-word{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); }
+  .winner-name{ font-family:'Playfair Display', serif; font-weight:900; font-size:38px; color:var(--navy); margin:6px 0 18px;}
+  .final-row{ display:flex; justify-content:space-between; padding:10px 6px; border-bottom:1px solid var(--paper-line); font-size:15px;}
+  .final-row.win{ font-weight:700; color:var(--stamp-green); }
+  .final-row.member{ font-size:12.5px; padding-left:20px; color:var(--ink-soft); border-bottom:none; }
+
+  @media (max-width:480px){
+    .masthead h1{ font-size:32px; }
+    .entry-letter{ font-size:48px; }
+    .reveal-letter{ font-size:96px; }
+    .card{ padding:22px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="paper-texture"></div>
+<div class="theme-switch" id="themeSwitch">
+  <button class="theme-toggle-btn" id="themeToggleBtn" title="Change theme" aria-label="Change theme" type="button">🎨</button>
+  <div class="theme-menu hidden" id="themeMenu">
+    <button class="theme-swatch active" data-theme="" style="background:#f1ead4" title="Parchment" type="button"></button>
+    <button class="theme-swatch" data-theme="theme-navy" style="background:#1d3a5f" title="Twilight Navy" type="button"></button>
+    <button class="theme-swatch" data-theme="theme-green" style="background:#355e3b" title="Meadow Green" type="button"></button>
+    <button class="theme-swatch" data-theme="theme-rose" style="background:#8a3b4a" title="Rosewood" type="button"></button>
+    <button class="theme-swatch" data-theme="theme-dark" style="background:#1b1a17" title="Slate Dark" type="button"></button>
+    <button class="theme-swatch" data-theme="theme-amethyst" style="background:#5b3a86" title="Amethyst" type="button"></button>
+  </div>
+</div>
+<div class="stage">
+  <div class="masthead">
+    <div class="eyebrow">Est. this evening — a word game</div>
+    <h1>Inkwell</h1>
+    <div class="rule"></div>
+    <div class="tagline">the letter is drawn. the clock is set. defend your word.</div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="screen-setup" class="card">
+    <div class="field">
+      <label>Play as</label>
+      <div class="toggle-row">
+        <div class="toggle-btn on" id="toggleSolo" data-teams="0">Individuals<span class="tb-sub">everyone for themselves</span></div>
+        <div class="toggle-btn" id="toggleTeams" data-teams="1">Teams<span class="tb-sub">split into squads</span></div>
+      </div>
+    </div>
+
+    <div class="field" id="teamCountField" style="display:none;">
+      <label>Number of teams</label>
+      <input type="number" id="numTeams" min="2" max="4" value="2">
+    </div>
+
+    <div class="field">
+      <label>Number of players</label>
+      <input type="number" id="numPlayers" min="2" max="8" value="3">
+    </div>
+    <div class="field">
+      <label>Player names<span id="teamAssignHint" style="display:none;"> &amp; teams</span></label>
+      <div class="players-list" id="playersList"></div>
+    </div>
+    <div class="field">
+      <label>Game ends when…</label>
+      <div class="mode-options">
+        <label class="mode-option">
+          <input type="radio" name="mode" value="two" checked>
+          <span><span class="mo-title" id="modeTwoTitle">Two players go into the red</span><br><span class="mo-desc" id="modeTwoDesc">Duel ends the moment a second player's score drops below zero.</span></span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="mode" value="all">
+          <span><span class="mo-title" id="modeAllTitle">Every player goes into the red</span><br><span class="mo-desc" id="modeAllDesc">Play until nobody has a non-negative score left.</span></span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="mode" value="time">
+          <span><span class="mo-title">10 minutes are up</span><br><span class="mo-desc">A hard clock on the whole match — highest score wins.</span></span>
+        </label>
+      </div>
+    </div>
+    <button class="btn" id="btnDraw">Draw the letter &amp; begin</button>
+  </div>
+
+  <!-- REVEAL -->
+  <div id="screen-reveal" class="card reveal-card hidden">
+    <div class="reveal-sub">Today's letter</div>
+    <div class="reveal-letter" id="revealLetter">?</div>
+    <div class="reveal-sub" style="margin-top:10px;">20 seconds per turn · +10 correct · −5 wrong or timeout</div>
+    <div class="reveal-starter">First to the inkwell: <b id="revealStarter">—</b></div>
+    <button class="btn" id="btnStartGame" style="margin-top:24px;">Begin the duel</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="card hidden">
+    <div class="top-bar">
+      <span id="roundInfo">Round 1</span>
+      <span id="clockInfo">00:00 elapsed</span>
+    </div>
+    <div class="entry-head">
+      <div class="entry-sub">the word must begin with</div>
+      <div class="entry-letter" id="gameLetter">A</div>
+    </div>
+    <div class="turn-line" id="turnLine">It's <span class="pname" id="curPlayerName">—</span>'s turn<span id="curTeamWrap" class="hidden"> · <span class="tname" id="curTeamName">—</span></span> — <span id="timerNum">20</span>s left</div>
+    <div class="answer-row">
+      <input type="text" id="wordInput" placeholder="Type a word…" autocomplete="off">
+      <button class="btn" id="btnSubmit">Submit</button>
+    </div>
+    <div class="hint" id="dictHint">Real words only — checked against a live dictionary. No repeats.</div>
+
+    <div id="resultBanner"></div>
+
+    <div class="scoreboard">
+      <div class="sb-title">Scoreboard</div>
+      <div id="sbRows"></div>
+    </div>
+
+    <div class="used-words" id="usedWordsBox"></div>
+  </div>
+
+  <!-- END -->
+  <div id="screen-end" class="card end-card hidden">
+    <div class="trophy-word">The duel is settled</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <div id="endReason" style="color:var(--ink-soft); font-size:13px; margin-bottom:18px;"></div>
+    <div id="finalRows"></div>
+    <button class="btn" id="btnRestart" style="margin-top:22px;">New duel</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const themeMenu = document.getElementById('themeMenu');
+  themeToggleBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    themeMenu.classList.toggle('hidden');
+  });
+  document.addEventListener('click', ()=> themeMenu.classList.add('hidden'));
+  themeMenu.querySelectorAll('.theme-swatch').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      document.body.className = btn.dataset.theme || '';
+      themeMenu.querySelectorAll('.theme-swatch').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      themeMenu.classList.add('hidden');
+    });
+  });
+
+  const TEAM_COLORS = ['var(--teamA)','var(--teamB)','var(--teamC)','var(--teamD)'];
+
+  const screens = {
+    setup: document.getElementById('screen-setup'),
+    reveal: document.getElementById('screen-reveal'),
+    game: document.getElementById('screen-game'),
+    end: document.getElementById('screen-end'),
+  };
+  function show(name){
+    Object.values(screens).forEach(s=>s.classList.add('hidden'));
+    screens[name].classList.remove('hidden');
+  }
+
+  // ---- Setup screen wiring ----
+  const numPlayersInput = document.getElementById('numPlayers');
+  const numTeamsInput = document.getElementById('numTeams');
+  const playersList = document.getElementById('playersList');
+  const toggleSolo = document.getElementById('toggleSolo');
+  const toggleTeams = document.getElementById('toggleTeams');
+  const teamCountField = document.getElementById('teamCountField');
+  const teamAssignHint = document.getElementById('teamAssignHint');
+
+  let teamModeOn = false;
+
+  function setTeamMode(on){
+    teamModeOn = on;
+    toggleSolo.classList.toggle('on', !on);
+    toggleTeams.classList.toggle('on', on);
+    teamCountField.style.display = on ? 'block' : 'none';
+    teamAssignHint.style.display = on ? 'inline' : 'none';
+    const unit = on ? 'teams' : 'players';
+    document.getElementById('modeTwoTitle').textContent = 'Two ' + unit + ' go into the red';
+    document.getElementById('modeTwoDesc').textContent = 'Duel ends the moment a second ' + (on?'team':'player') + "'s score drops below zero.";
+    document.getElementById('modeAllTitle').textContent = 'Every ' + (on?'team':'player') + ' goes into the red';
+    document.getElementById('modeAllDesc').textContent = 'Play until nobody has a non-negative score left.';
+    renderPlayerInputs();
+  }
+  toggleSolo.addEventListener('click', ()=>setTeamMode(false));
+  toggleTeams.addEventListener('click', ()=>setTeamMode(true));
+  numTeamsInput.addEventListener('input', renderPlayerInputs);
+  numPlayersInput.addEventListener('blur', ()=>{
+    const n = Math.max(2, Math.min(8, parseInt(numPlayersInput.value)||2));
+    numPlayersInput.value = n;
+    renderPlayerInputs();
+  });
+  numTeamsInput.addEventListener('blur', ()=>{
+    const t = Math.max(2, Math.min(4, parseInt(numTeamsInput.value)||2));
+    numTeamsInput.value = t;
+    renderPlayerInputs();
+  });
+
+  function renderPlayerInputs(){
+    const rawN = parseInt(numPlayersInput.value);
+    // while the field is empty or mid-edit, fall back to the current row count
+    // instead of snapping to the minimum — avoids fighting the user's typing
+    const n = isNaN(rawN) ? Math.max(2, playersList.children.length || 3) : Math.max(2, Math.min(8, rawN));
+    const rawTeams = parseInt(numTeamsInput.value);
+    const teamCount = isNaN(rawTeams) ? 2 : Math.max(2, Math.min(4, rawTeams));
+
+    const existingNames = [...playersList.querySelectorAll('input')].map(i=>i.value);
+    const existingTeams = [...playersList.querySelectorAll('select')].map(s=>s.value);
+    playersList.innerHTML = '';
+    for(let i=0;i<n;i++){
+      const row = document.createElement('div');
+      row.className = 'player-row';
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = 'Player ' + (i+1);
+      inp.value = existingNames[i] || '';
+      row.appendChild(inp);
+      if(teamModeOn){
+        const sel = document.createElement('select');
+        for(let t=0;t<teamCount;t++){
+          const opt = document.createElement('option');
+          opt.value = t;
+          opt.textContent = 'Team ' + (t+1);
+          sel.appendChild(opt);
+        }
+        sel.value = existingTeams[i] !== undefined && existingTeams[i] < teamCount ? existingTeams[i] : (i % teamCount);
+        row.appendChild(sel);
+      }
+      playersList.appendChild(row);
+    }
+  }
+  numPlayersInput.addEventListener('input', renderPlayerInputs);
+  renderPlayerInputs();
+
+  // ---- Game state ----
+  let players = [];      // {name, score, eliminated, teamId|null}
+  let teams = [];         // {id, name, score, eliminated, color}
+  let turnOrder = [];      // array of player indices, interleaved by team when relevant
+  let orderPos = 0;
+  let letter = 'A';
+  let usedWords = new Set();
+  let mode = 'two';
+  let turnTimeLeft = 20;
+  let turnInterval = null;
+  let matchStart = null;
+  let matchInterval = null;
+  const TURN_SECONDS = 20;
+  const MATCH_LIMIT_MS = 10*60*1000;
+  let turnLocked = false; // true while a submission is being processed or result is on screen
+
+  document.getElementById('btnDraw').addEventListener('click', ()=>{
+    const rows = [...playersList.querySelectorAll('.player-row')];
+    players = rows.map((row,idx)=>{
+      const nameInput = row.querySelector('input');
+      const sel = row.querySelector('select');
+      return {
+        name: nameInput.value.trim() || ('Player ' + (idx+1)),
+        score: 0,
+        eliminated: false,
+        teamId: teamModeOn ? parseInt(sel.value) : null
+      };
+    });
+
+    if(teamModeOn){
+      const teamCount = Math.max(2, Math.min(4, parseInt(numTeamsInput.value)||2));
+      teams = [];
+      for(let t=0;t<teamCount;t++){
+        teams.push({ id:t, name:'Team ' + (t+1), score:0, eliminated:false, color: TEAM_COLORS[t % TEAM_COLORS.length] });
+      }
+      // build turn order interleaved across teams for fairness
+      const buckets = teams.map(t => players.map((p,i)=>i).filter(i => players[i].teamId === t.id));
+      turnOrder = [];
+      let more = true, k = 0;
+      while(more){
+        more = false;
+        for(const bucket of buckets){
+          if(k < bucket.length){ turnOrder.push(bucket[k]); more = true; }
+        }
+        k++;
+      }
+    } else {
+      teams = [];
+      turnOrder = players.map((p,i)=>i);
+    }
+
+    mode = document.querySelector('input[name=mode]:checked').value;
+    letter = String.fromCharCode(65 + Math.floor(Math.random()*26));
+    usedWords = new Set();
+    orderPos = Math.floor(Math.random()*turnOrder.length);
+
+    document.getElementById('revealLetter').textContent = letter;
+    const starter = players[turnOrder[orderPos]];
+    document.getElementById('revealStarter').textContent = teamModeOn
+      ? starter.name + ' (' + teams[starter.teamId].name + ')'
+      : starter.name;
+    show('reveal');
+  });
+
+  document.getElementById('btnStartGame').addEventListener('click', ()=>{
+    matchStart = Date.now();
+    document.getElementById('gameLetter').textContent = letter;
+    renderScoreboard();
+    startTurn();
+    matchInterval = setInterval(updateMatchClock, 500);
+    show('game');
+  });
+
+  function updateMatchClock(){
+    const elapsed = Date.now() - matchStart;
+    const s = Math.floor(elapsed/1000);
+    const mm = String(Math.floor(s/60)).padStart(2,'0');
+    const ss = String(s%60).padStart(2,'0');
+    document.getElementById('clockInfo').textContent = mm+':'+ss+' elapsed';
+    if(elapsed >= MATCH_LIMIT_MS){
+      endGame(mode === 'time' ? "The ten-minute clock ran out." : "The ten-minute safety clock ran out.");
+    }
+  }
+
+  function isEliminated(playerIdx){
+    const p = players[playerIdx];
+    return teamModeOn ? teams[p.teamId].eliminated : p.eliminated;
+  }
+
+  function activeOrderCount(){
+    return turnOrder.filter(i => !isEliminated(i)).length;
+  }
+
+  function nextActiveOrderPos(fromPos){
+    if(activeOrderCount() === 0) return -1;
+    let pos = fromPos;
+    for(let i=0;i<turnOrder.length;i++){
+      pos = (pos+1) % turnOrder.length;
+      if(!isEliminated(turnOrder[pos])) return pos;
+    }
+    return -1;
+  }
+
+  function startTurn(){
+    turnLocked = false;
+    document.getElementById('resultBanner').innerHTML = '';
+    const p = players[turnOrder[orderPos]];
+    document.getElementById('curPlayerName').textContent = p.name;
+    const teamWrap = document.getElementById('curTeamWrap');
+    if(teamModeOn){
+      teamWrap.classList.remove('hidden');
+      const teamNameEl = document.getElementById('curTeamName');
+      teamNameEl.textContent = teams[p.teamId].name;
+      teamNameEl.style.color = teams[p.teamId].color;
+    } else {
+      teamWrap.classList.add('hidden');
+    }
+    document.getElementById('roundInfo').textContent = 'Letter ' + letter + ' · ' + usedWords.size + ' word' + (usedWords.size===1?'':'s') + ' claimed';
+    renderScoreboard();
+    turnTimeLeft = TURN_SECONDS;
+    updateTimerDisplay();
+    const input = document.getElementById('wordInput');
+    input.value = '';
+    input.disabled = false;
+    document.getElementById('btnSubmit').disabled = false;
+    input.focus();
+
+    clearInterval(turnInterval);
+    turnInterval = setInterval(()=>{
+      if(turnLocked){ clearInterval(turnInterval); return; }
+      turnTimeLeft--;
+      updateTimerDisplay();
+      if(turnTimeLeft <= 0){
+        clearInterval(turnInterval);
+        turnLocked = true;
+        resolveTurn(false, "Time's up — no word submitted.");
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay(){
+    const el = document.getElementById('timerNum');
+    if(el) el.textContent = turnTimeLeft;
+  }
+
+  document.getElementById('btnSubmit').addEventListener('click', submitWord);
+  document.getElementById('wordInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') submitWord();
+  });
+
+  async function submitWord(){
+    if(turnLocked) return;
+    const input = document.getElementById('wordInput');
+    const raw = input.value.trim();
+    if(!raw) return;
+
+    turnLocked = true;
+    clearInterval(turnInterval);
+    input.disabled = true;
+    document.getElementById('btnSubmit').disabled = true;
+
+    const word = raw.toLowerCase();
+
+    if(word[0] !== letter.toLowerCase()){
+      resolveTurn(false, 'That word does not start with "' + letter + '".');
+      return;
+    }
+    if(usedWords.has(word)){
+      resolveTurn(false, '"' + raw + '" was already claimed this game.');
+      return;
+    }
+    if(word.length < 2 || !/^[a-z]+$/.test(word)){
+      resolveTurn(false, 'Not a valid word to check.');
+      return;
+    }
+
+    document.getElementById('btnSubmit').textContent = 'Checking…';
+    try{
+      const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word));
+      if(res.status === 404){
+        resolveTurn(false, '"' + raw + '" is not in the dictionary.');
+      } else if(res.ok){
+        const data = await res.json();
+        const meaning = extractMeaning(data);
+        usedWords.add(word);
+        resolveTurn(true, meaning, raw);
+      } else {
+        // dictionary service hiccup (not a 404) — don't punish the player for infrastructure
+        usedWords.add(word);
+        resolveTurn(true, 'Definition unavailable (dictionary service busy) — word accepted.', raw, true);
+      }
+    }catch(err){
+      // network/CORS failure — give benefit of the doubt rather than falsely scoring it wrong
+      usedWords.add(word);
+      resolveTurn(true, "Definition unavailable (couldn't reach the dictionary) — word accepted.", raw, true);
+    }finally{
+      document.getElementById('btnSubmit').textContent = 'Submit';
+    }
+  }
+
+  function extractMeaning(data){
+    try{
+      const entry = data[0];
+      const meaningBlock = entry.meanings[0];
+      const pos = meaningBlock.partOfSpeech;
+      const def = meaningBlock.definitions[0].definition;
+      return '(' + pos + ') ' + def;
+    }catch(e){
+      return 'Definition unavailable.';
+    }
+  }
+
+  function resolveTurn(correct, message, displayWord, unverified){
+    turnLocked = true;
+    const idx = turnOrder[orderPos];
+    const p = players[idx];
+    const banner = document.getElementById('resultBanner');
+
+    if(correct){
+      p.score += 10;
+      if(teamModeOn) teams[p.teamId].score += 10;
+      const cls = unverified ? 'neutral' : 'good';
+      const tag = unverified ? '+10 · accepted' : '+10 · valid';
+      banner.innerHTML = '<div class="result-banner '+cls+'"><span class="stamp">'+tag+'</span>' +
+        '<span class="result-text"><b>"' + escapeHtml(displayWord) + '" accepted</b><span class="meaning">' + escapeHtml(message) + '</span></span></div>';
+    } else {
+      p.score -= 5;
+      if(teamModeOn) teams[p.teamId].score -= 5;
+      banner.innerHTML = '<div class="result-banner bad"><span class="stamp">−5</span>' +
+        '<span class="result-text"><b>Rejected</b><span class="meaning">' + escapeHtml(message) + '</span></span></div>';
+    }
+
+    if(teamModeOn){
+      const t = teams[p.teamId];
+      if(t.score < 0 && !t.eliminated) t.eliminated = true;
+    } else {
+      if(p.score < 0 && !p.eliminated) p.eliminated = true;
+    }
+
+    renderScoreboard();
+    renderUsedWords();
+
+    if(checkEndConditions()) return;
+
+    setTimeout(()=>{
+      const next = nextActiveOrderPos(orderPos);
+      if(next === -1){ endGame('Everyone has gone into the red.'); return; }
+      orderPos = next;
+      startTurn();
+    }, correct ? 2600 : 1800);
+  }
+
+  function checkEndConditions(){
+    if(teamModeOn){
+      const eliminatedTeams = teams.filter(t=>t.eliminated).length;
+      const remainingTeams = teams.filter(t=>!t.eliminated).length;
+      if(remainingTeams <= 1){
+        const survivor = teams.find(t=>!t.eliminated);
+        endGame(survivor ? survivor.name + ' is the last team standing.' : 'Every team has gone into the red.');
+        return true;
+      }
+      if(mode === 'two' && eliminatedTeams >= Math.min(2, teams.length)){
+        endGame(eliminatedTeams >= teams.length ? 'All competing teams have gone into the red.' : 'Two teams have gone into the red.');
+        return true;
+      }
+      if(mode === 'all' && eliminatedTeams >= teams.length){
+        endGame('Every team has gone into the red.');
+        return true;
+      }
+      return false;
+    } else {
+      const eliminatedCount = players.filter(p=>p.eliminated).length;
+      const remaining = players.filter(p=>!p.eliminated).length;
+      if(remaining <= 1){
+        const survivor = players.find(p=>!p.eliminated);
+        endGame(survivor ? survivor.name + ' is the last one standing.' : 'Every player has gone into the red.');
+        return true;
+      }
+      if(mode === 'two' && eliminatedCount >= Math.min(2, players.length)){
+        endGame(eliminatedCount >= players.length ? 'All players have gone into the red.' : 'Two players have gone into the red.');
+        return true;
+      }
+      if(mode === 'all' && eliminatedCount >= players.length){
+        endGame('Every player has gone into the red.');
+        return true;
+      }
+      return false;
+    }
+  }
+
+  function renderScoreboard(){
+    const box = document.getElementById('sbRows');
+    if(teamModeOn){
+      const curTeam = players[turnOrder[orderPos]] ? players[turnOrder[orderPos]].teamId : -1;
+      box.innerHTML = teams.map(t=>{
+        const cls = ['sb-row','team-head'];
+        if(t.id === curTeam && !t.eliminated) cls.push('active');
+        if(t.eliminated) cls.push('eliminated');
+        const scoreCls = t.score < 0 ? 'neg' : (t.score > 0 ? 'pos' : '');
+        let html = '<div class="'+cls.join(' ')+'"><span><span class="team-swatch" style="background:'+t.color+'"></span>'+escapeHtml(t.name)+(t.eliminated?' (out)':'')+'</span><span class="sb-score '+scoreCls+'">'+(t.score>0?'+':'')+t.score+'</span></div>';
+        players.filter(p=>p.teamId===t.id).forEach(p=>{
+          const pScoreCls = p.score < 0 ? 'neg' : (p.score > 0 ? 'pos' : '');
+          html += '<div class="sb-row member"><span>'+escapeHtml(p.name)+'</span><span class="sb-score '+pScoreCls+'">'+(p.score>0?'+':'')+p.score+'</span></div>';
+        });
+        return html;
+      }).join('');
+    } else {
+      const curIdx = turnOrder[orderPos];
+      box.innerHTML = players.map((p,i)=>{
+        const cls = ['sb-row'];
+        if(i===curIdx && !p.eliminated) cls.push('active');
+        if(p.eliminated) cls.push('eliminated');
+        const scoreCls = p.score < 0 ? 'neg' : (p.score > 0 ? 'pos' : '');
+        return '<div class="'+cls.join(' ')+'"><span>'+escapeHtml(p.name)+(p.eliminated?' (out)':'')+'</span><span class="sb-score '+scoreCls+'">'+(p.score>0?'+':'')+p.score+'</span></div>';
+      }).join('');
+    }
+  }
+
+  function renderUsedWords(){
+    const box = document.getElementById('usedWordsBox');
+    if(usedWords.size === 0){ box.innerHTML = ''; return; }
+    box.innerHTML = '<b>Claimed:</b> ' + [...usedWords].join(', ');
+  }
+
+  function endGame(reason){
+    clearInterval(turnInterval);
+    clearInterval(matchInterval);
+
+    if(teamModeOn){
+      const sorted = [...teams].sort((a,b)=> b.score - a.score);
+      const winner = sorted[0];
+      document.getElementById('winnerName').textContent = winner.name + ' wins';
+      document.getElementById('endReason').textContent = reason + ' Final score: ' + (winner.score>0?'+':'') + winner.score + ' points.';
+      document.getElementById('finalRows').innerHTML = sorted.map((t,i)=>{
+        const cls = 'final-row' + (i===0?' win':'');
+        let html = '<div class="'+cls+'"><span>'+(i+1)+'. '+escapeHtml(t.name)+(t.eliminated?' (out)':'')+'</span><span>'+(t.score>0?'+':'')+t.score+'</span></div>';
+        players.filter(p=>p.teamId===t.id).forEach(p=>{
+          html += '<div class="final-row member"><span>'+escapeHtml(p.name)+'</span><span>'+(p.score>0?'+':'')+p.score+'</span></div>';
+        });
+        return html;
+      }).join('');
+    } else {
+      const sorted = [...players].sort((a,b)=> b.score - a.score);
+      const winner = sorted[0];
+      document.getElementById('winnerName').textContent = winner.name + ' wins';
+      document.getElementById('endReason').textContent = reason + ' Final score: ' + (winner.score>0?'+':'') + winner.score + ' points.';
+      document.getElementById('finalRows').innerHTML = sorted.map((p,i)=>{
+        const cls = 'final-row' + (i===0?' win':'');
+        return '<div class="'+cls+'"><span>'+(i+1)+'. '+escapeHtml(p.name)+(p.eliminated?' (out)':'')+'</span><span>'+(p.score>0?'+':'')+p.score+'</span></div>';
+      }).join('');
+    }
+    show('end');
+  }
+
+  document.getElementById('btnRestart').addEventListener('click', ()=>{ show('setup'); });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+})();
+</script>
+</body>
+</html>

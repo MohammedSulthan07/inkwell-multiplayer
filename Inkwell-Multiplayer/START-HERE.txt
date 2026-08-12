@@ -1,0 +1,33 @@
+INKWELL MULTIPLAYER — RENDER + VERCEL
+
+1) Backend: Render
+   - Push this project to GitHub.
+   - In Render, New -> Web Service -> select the repository.
+   - Root Directory: inkwell-multiplayer (or leave blank if this folder is the repo root).
+   - Build Command: npm install
+   - Start Command: npm start
+   - Instance Type: Free
+   - Health Check Path: /health
+   - Deploy and copy the https://....onrender.com URL.
+
+2) Frontend: Vercel
+   - In public/config.js change:
+       window.INKWELL_SERVER_URL = 'http://localhost:10000';
+     to your Render URL, e.g.:
+       window.INKWELL_SERVER_URL = 'https://inkwell-server.onrender.com';
+   - Push the change to GitHub.
+   - In Vercel, import the same repository.
+   - Framework Preset: Other
+   - Root Directory: inkwell-multiplayer/public (if the repo contains the project folder) or public (if the project folder is the repo root).
+   - Build Command: leave empty.
+   - Output Directory: .
+   - Deploy.
+
+3) Open the Vercel URL on multiple devices, create a room, and share the QR/link.
+
+LOCAL TESTING
+   Terminal 1: npm install
+   Terminal 1: npm start
+   Open public/index.html through a static server, not file://.
+   Example: npx serve public -l 5173
+   Then browse http://localhost:5173

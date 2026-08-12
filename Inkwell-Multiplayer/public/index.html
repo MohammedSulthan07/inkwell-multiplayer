@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2f4858">
+  <meta name="description" content="Inkwell — a real-time multiplayer word duel.">
+  <title>Inkwell — The Word Duel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="paper-texture"></div>
+  <div class="theme-switch" id="themeSwitch">
+    <button class="theme-toggle-btn" id="themeToggleBtn" title="Change theme" aria-label="Change theme" type="button">🎨</button>
+    <div class="theme-menu hidden" id="themeMenu">
+      <button class="theme-swatch active" data-theme="" style="background:#f1ead4" title="Parchment" type="button"></button>
+      <button class="theme-swatch" data-theme="theme-navy" style="background:#1d3a5f" title="Twilight Navy" type="button"></button>
+      <button class="theme-swatch" data-theme="theme-green" style="background:#355e3b" title="Meadow Green" type="button"></button>
+      <button class="theme-swatch" data-theme="theme-rose" style="background:#8a3b4a" title="Rosewood" type="button"></button>
+      <button class="theme-swatch" data-theme="theme-dark" style="background:#1b1a17" title="Slate Dark" type="button"></button>
+      <button class="theme-swatch" data-theme="theme-amethyst" style="background:#5b3a86" title="Amethyst" type="button"></button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="masthead">
+      <div class="eyebrow">Est. this evening — a multiplayer word game</div>
+      <h1>Inkwell</h1>
+      <div class="rule"></div>
+      <div class="tagline">the letter is drawn. the clock is set. defend your word.</div>
+      <div class="connection-pill" id="connectionPill"><span class="status-dot"></span><span id="connectionText">Connecting…</span></div>
+    </div>
+
+    <div id="appAlert" class="app-alert hidden"></div>
+
+    <section id="screen-home" class="card">
+      <div class="home-grid">
+        <div class="home-action">
+          <div class="section-kicker">Host a match</div>
+          <h2>Gather the players.</h2>
+          <p>Create a private room, share the code or QR link, and control the match from your screen.</p>
+          <button class="btn" id="btnCreateRoom" type="button">Create a room</button>
+        </div>
+        <div class="home-divider">or</div>
+        <div class="home-action">
+          <div class="section-kicker">Join a match</div>
+          <h2>Take your seat.</h2>
+          <p>Use a friend's room code or open their invite link on any phone, tablet, or computer.</p>
+          <button class="btn secondary" id="btnShowJoin" type="button">Join a room</button>
+        </div>
+      </div>
+      <div class="home-footnote">No accounts, passwords, or app installation for players.</div>
+    </section>
+
+    <section id="screen-name" class="card hidden">
+      <div class="form-head">
+        <div class="section-kicker">Your seat</div>
+        <h2 id="nameTitle">Join Inkwell</h2>
+        <p id="nameSubtitle">Enter your name to enter the room.</p>
+      </div>
+      <div class="field">
+        <label for="playerNameInput">Your name</label>
+        <input id="playerNameInput" type="text" maxlength="24" placeholder="e.g. Mohammed" autocomplete="name">
+      </div>
+      <div class="field" id="joinCodeField">
+        <label for="roomCodeInput">Room code</label>
+        <input id="roomCodeInput" type="text" maxlength="8" placeholder="INK-7K4P" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-actions">
+        <button class="btn secondary" id="btnBackHome" type="button">Back</button>
+        <button class="btn" id="btnContinueName" type="button">Continue</button>
+      </div>
+    </section>
+
+    <section id="screen-lobby" class="card hidden">
+      <div class="top-bar"><span>Room <b id="lobbyRoomCode">—</b></span><span id="lobbyRole">—</span></div>
+      <div class="lobby-code-panel">
+        <div>
+          <div class="section-kicker">Invite players</div>
+          <div class="room-code-large" id="roomCodeLarge">INK-7K4P</div>
+          <div class="room-link" id="roomLinkText">—</div>
+        </div>
+        <div class="qr-wrap"><div id="qrCode"></div></div>
+      </div>
+      <div class="lobby-columns">
+        <div>
+          <div class="section-title">Players</div>
+          <div id="lobbyPlayers" class="lobby-players"></div>
+          <div class="hint" id="lobbyHint">Waiting for the host to start the duel.</div>
+        </div>
+        <div id="hostSettings" class="host-settings hidden">
+          <div class="section-title">Match settings</div>
+          <div class="field compact">
+            <label>Play as</label>
+            <div class="toggle-row">
+              <button class="toggle-btn on" id="toggleSolo" type="button">Individuals<span class="tb-sub">everyone for themselves</span></button>
+              <button class="toggle-btn" id="toggleTeams" type="button">Teams<span class="tb-sub">split into squads</span></button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="field compact"><label for="numTeams">Teams</label><input type="number" id="numTeams" min="2" max="4" value="2"></div>
+            <div class="field compact"><label for="modeSelect">End condition</label><select id="modeSelect"><option value="two">Two go into the red</option><option value="all">Everyone goes into the red</option><option value="time">Timed match</option></select></div>
+          </div>
+          <div class="settings-row">
+            <div class="field compact"><label for="minutesInput">Match minutes</label><input type="number" id="minutesInput" min="1" max="30" value="10"></div>
+            <div class="field compact"><label for="turnSecondsInput">Seconds / turn</label><input type="number" id="turnSecondsInput" min="5" max="60" value="20"></div>
+          </div>
+          <button class="btn" id="btnStartLobby" type="button">Draw the letter &amp; begin</button>
+        </div>
+      </div>
+      <div class="lobby-actions"><button class="btn secondary" id="btnLeaveRoom" type="button">Leave room</button><button class="btn secondary" id="btnCopyInvite" type="button">Copy invite link</button></div>
+    </section>
+
+    <section id="screen-reveal" class="card reveal-card hidden">
+      <div class="reveal-sub">Today's letter</div>
+      <div class="reveal-letter" id="revealLetter">?</div>
+      <div class="reveal-sub" id="revealRulesText" style="margin-top:10px;">20 seconds per turn · +10 correct · −5 wrong or timeout</div>
+      <div class="reveal-starter">First to the inkwell: <b id="revealStarter">—</b></div>
+      <div class="hint" id="revealWaitHint">The host is starting the duel…</div>
+    </section>
+
+    <section id="screen-game" class="card hidden">
+      <div class="top-bar"><span id="roundInfo">Letter A · 0 words claimed</span><span id="clockInfo">00:00 elapsed</span></div>
+      <div class="entry-head"><div class="entry-sub">the word must begin with</div><div class="entry-letter" id="gameLetter">A</div></div>
+      <div class="turn-line" id="turnLine">It's <span class="pname" id="curPlayerName">—</span>'s turn<span id="curTeamWrap" class="hidden"> · <span class="tname" id="curTeamName">—</span></span> — <span id="timerNum">20</span>s left</div>
+      <div class="answer-row"><input type="text" id="wordInput" maxlength="40" placeholder="Type a word…" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="btn" id="btnSubmit" type="button">Submit</button></div>
+      <div class="hint" id="dictHint">Real words only — checked by the game server. No repeats.</div>
+      <div id="resultBanner"></div>
+      <div class="scoreboard"><div class="sb-title">Scoreboard</div><div id="sbRows"></div></div>
+      <div class="used-words" id="usedWordsBox"></div>
+    </section>
+
+    <section id="screen-end" class="card end-card hidden">
+      <div class="trophy-word">The duel is settled</div>
+      <div class="winner-name" id="winnerName">—</div>
+      <div id="endReason" style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;"></div>
+      <div id="finalRows"></div>
+      <div class="end-actions"><button class="btn" id="btnBackToLobby" type="button">Back to lobby</button><button class="btn secondary" id="btnNewRoom" type="button">New room</button></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
